@@ -3,10 +3,9 @@ set -e
 
 echo "🚀 Starting X-UI + nginx reverse proxy..."
 
-if [ -z "$PORT" ]; then
-  echo "⚠️  Warning: \$PORT is not set by Railway, defaulting to 8080 for nginx"
-  export PORT=8080
-fi
+# nginx همیشه روی پورت ثابت 3000 گوش می‌دهد، فارغ از هر مقداری که Railway تزریق کند
+# در Railway باید Target Port دقیقاً روی همین عدد (3000) تنظیم شود
+export NGINX_PORT=3000
 
 mkdir -p /etc/x-ui
 
@@ -21,8 +20,8 @@ cat > /etc/x-ui/config.json << EOF
 }
 EOF
 
-echo "🔧 Building nginx.conf for external port: $PORT"
-envsubst '${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+echo "🔧 Building nginx.conf for fixed port: $NGINX_PORT"
+envsubst '${NGINX_PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 echo "▶️  Starting x-ui in background..."
 cd /usr/local/x-ui
@@ -31,6 +30,6 @@ X_UI_PID=$!
 
 sleep 2
 
-echo "▶️  Starting nginx in foreground on port $PORT..."
+echo "▶️  Starting nginx in foreground on port $NGINX_PORT..."
 nginx -t
 exec nginx -g "daemon off;"
